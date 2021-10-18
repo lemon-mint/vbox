@@ -29,11 +29,21 @@ func TestBlackBox(t *testing.T) {
 	}
 }
 
-func BenchmarkBlackBox(b *testing.B) {
+func BenchmarkBlackBoxSeal(b *testing.B) {
 	box := NewBlackBox([]byte("test"))
 	b.RunParallel(func(p *testing.PB) {
 		for p.Next() {
 			box.Seal(plaintext)
+		}
+	})
+}
+
+func BenchmarkBlackBoxOpen(b *testing.B) {
+	box := NewBlackBox([]byte("test"))
+	sealed := box.Seal(plaintext)
+	b.RunParallel(func(p *testing.PB) {
+		for p.Next() {
+			box.Open(sealed)
 		}
 	})
 }
