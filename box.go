@@ -37,37 +37,46 @@ func NewBlackBox(key []byte) *BlackBox {
 	return box
 }
 
+// Seal allocates a new slice and copies the encrypted data into it.
 func (b *BlackBox) Seal(src []byte) []byte {
-	nonce0 := make([]byte, b.aead0.NonceSize())
-	nonce1 := make([]byte, b.aead1.NonceSize())
-	n, err := rand.Read(nonce0)
-	if err != nil || n != len(nonce0) {
+	var noncesize0, noncesize1 int = b.aead0.NonceSize(), b.aead1.NonceSize()
+	var overhead0, overhead1 int = b.aead0.Overhead(), b.aead1.Overhead()
+	outputbuf := make([]byte, noncesize0+noncesize1+len(src)+overhead0+overhead1)
+
+	n, err := rand.Read(outputbuf[:noncesize0+noncesize1])
+	if err != nil || n != noncesize0+noncesize1 {
 		panic(err)
 	}
-	n, err = rand.Read(nonce1)
-	if err != nil || n != len(nonce1) {
-		panic(err)
-	}
-	data := b.aead0.Seal(nonce0, nonce0, src, nil)
-	return b.aead1.Seal(nonce1, nonce1, data, nil)
+	b.aead0.Seal(outputbuf[:noncesize0+noncesize1], outputbuf[noncesize1:noncesize0+noncesize1], src, nil)
+	return b.aead1.Seal(outputbuf[:noncesize1], outputbuf[:noncesize1], outputbuf[noncesize1:noncesize0+noncesize1+len(src)+overhead0], nil)
 }
 
+// Open allocates a new slice and copies the decrypted data into it.
 func (b *BlackBox) Open(src []byte) ([]byte, bool) {
-	if len(src) < b.aead1.NonceSize() {
+	return b.openDst(nil, src)
+}
+
+// OpenOverWrite overwrites the input slice with the decrypted data.
+// Better Performance than Open. But the input slice will be overwritten.
+func (b *BlackBox) OpenOverWrite(src []byte) ([]byte, bool) {
+	return b.openDst(src[b.aead1.NonceSize():], src)
+}
+
+func (b *BlackBox) openDst(dst, src []byte) ([]byte, bool) {
+	var noncesize0, noncesize1 int = b.aead0.NonceSize(), b.aead1.NonceSize()
+	var overhead0, overhead1 int = b.aead0.Overhead(), b.aead1.Overhead()
+	if len(src) < noncesize0+noncesize1+overhead0+overhead1 {
 		return nil, false
 	}
-	nonce1 := src[:b.aead1.NonceSize()]
-	data, err := b.aead1.Open(nil, nonce1, src[b.aead1.NonceSize():], nil)
+	nonce1 := src[:noncesize1]
+	dst, err := b.aead1.Open(dst[:0], nonce1, src[noncesize1:], nil)
 	if err != nil {
 		return nil, false
 	}
-	if len(data) < b.aead0.NonceSize() {
-		return nil, false
-	}
-	nonce0 := data[:b.aead0.NonceSize()]
-	data, err = b.aead0.Open(nil, nonce0, data[b.aead0.NonceSize():], nil)
+	nonce0 := dst[:noncesize0]
+	dst, err = b.aead0.Open(dst[noncesize0:noncesize0], nonce0, dst[noncesize0:], nil)
 	if err != nil {
 		return nil, false
 	}
-	return data, true
+	return dst, true
 }

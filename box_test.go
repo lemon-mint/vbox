@@ -24,7 +24,19 @@ func TestBlackBox(t *testing.T) {
 	if !ok {
 		t.Error("Failed to open sealed message")
 	}
-	if !bytes.Equal(plaintext, opened) {
+	if len(plaintext) != len(opened) || !bytes.Equal(plaintext, opened) {
+		t.Error("Failed to open sealed message")
+	}
+}
+
+func TestSealAndOpenOverWrite(t *testing.T) {
+	box := NewBlackBox([]byte("test"))
+	sealed := box.Seal(plaintext)
+	opened, ok := box.OpenOverWrite(sealed)
+	if !ok {
+		t.Error("Failed to open sealed message")
+	}
+	if len(plaintext) != len(opened) || !bytes.Equal(plaintext, opened) {
 		t.Error("Failed to open sealed message")
 	}
 }
@@ -44,6 +56,26 @@ func BenchmarkBlackBoxOpen(b *testing.B) {
 	b.RunParallel(func(p *testing.PB) {
 		for p.Next() {
 			box.Open(sealed)
+		}
+	})
+}
+
+func BenchmarkBlackBoxSealAndOpen(b *testing.B) {
+	box := NewBlackBox([]byte("test"))
+	b.RunParallel(func(p *testing.PB) {
+		for p.Next() {
+			sealed := box.Seal(plaintext)
+			box.Open(sealed)
+		}
+	})
+}
+
+func BenchmarkBlackBoxSealAndOpenOverWrite(b *testing.B) {
+	box := NewBlackBox([]byte("test"))
+	b.RunParallel(func(p *testing.PB) {
+		for p.Next() {
+			sealed := box.Seal(plaintext)
+			box.OpenOverWrite(sealed)
 		}
 	})
 }
