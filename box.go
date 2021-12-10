@@ -5,7 +5,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 
-	"github.com/zeebo/blake3"
+	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
@@ -18,7 +18,7 @@ type BlackBox struct {
 
 func NewBlackBox(key []byte) *BlackBox {
 	box := &BlackBox{
-		key: blake3.Sum512(key),
+		key: blake2b.Sum512(key),
 	}
 	chapoly, err := chacha20poly1305.NewX(box.key[:32])
 	if err != nil {
