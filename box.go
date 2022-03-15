@@ -82,10 +82,12 @@ func (b *BlackBox) openDst(dst, src []byte) ([]byte, bool) {
 	return dst, true
 }
 
+// Base64Seal Seal and encode the data to base64 raw URL encoding.
 func (b *BlackBox) Base64Seal(src []byte) string {
 	return base64.RawURLEncoding.EncodeToString(b.Seal(src))
 }
 
+// Base64Open decode the data from base64 raw URL encoding and Open it.
 func (b *BlackBox) Base64Open(src string) ([]byte, bool) {
 	data, err := base64.RawURLEncoding.DecodeString(src)
 	if err != nil {
