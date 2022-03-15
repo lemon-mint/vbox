@@ -41,6 +41,18 @@ func TestSealAndOpenOverWrite(t *testing.T) {
 	}
 }
 
+func TestBase64SealAndBase64Open(t *testing.T) {
+	box := NewBlackBox([]byte("test"))
+	sealed := box.Base64Seal(plaintext)
+	opened, ok := box.Base64Open(sealed)
+	if !ok {
+		t.Error("Failed to open sealed message")
+	}
+	if len(plaintext) != len(opened) || !bytes.Equal(plaintext, opened) {
+		t.Error("Failed to open sealed message")
+	}
+}
+
 func BenchmarkBlackBoxSeal(b *testing.B) {
 	box := NewBlackBox([]byte("test"))
 	b.RunParallel(func(p *testing.PB) {

@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/base64"
 
 	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/chacha20poly1305"
@@ -79,4 +80,16 @@ func (b *BlackBox) openDst(dst, src []byte) ([]byte, bool) {
 		return nil, false
 	}
 	return dst, true
+}
+
+func (b *BlackBox) Base64Seal(src []byte) string {
+	return base64.RawURLEncoding.EncodeToString(b.Seal(src))
+}
+
+func (b *BlackBox) Base64Open(src string) ([]byte, bool) {
+	data, err := base64.RawURLEncoding.DecodeString(src)
+	if err != nil {
+		return nil, false
+	}
+	return b.Open(data)
 }
