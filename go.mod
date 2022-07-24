@@ -1,6 +1,6 @@
 module github.com/lemon-mint/vbox
 
-go 1.17
+go 1.18
 
 require golang.org/x/crypto v0.0.0-20220314234724-5d542ad81a58
 
