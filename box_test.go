@@ -91,3 +91,18 @@ func BenchmarkBlackBoxSealAndOpenOverWrite(b *testing.B) {
 		}
 	})
 }
+
+func TestInvalidLen(t *testing.T) {
+	box := NewBlackBox([]byte("Hello, World!"))
+	for i := 0; i < 128; i++ {
+		a := make([]byte, i)
+		_, ok := box.Open(a)
+		if ok {
+			panic("ok")
+		}
+		_, ok = box.OpenOverWrite(a)
+		if ok {
+			panic("ok")
+		}
+	}
+}

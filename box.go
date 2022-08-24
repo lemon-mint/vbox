@@ -60,6 +60,9 @@ func (b *BlackBox) Open(src []byte) ([]byte, bool) {
 // OpenOverWrite overwrites the input slice with the decrypted data.
 // Better Performance than Open. But the input slice will be overwritten.
 func (b *BlackBox) OpenOverWrite(src []byte) ([]byte, bool) {
+	if len(src) < b.aead1.NonceSize() {
+		return nil, false
+	}
 	return b.openDst(src[b.aead1.NonceSize():], src)
 }
 
